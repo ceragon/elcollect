@@ -22,9 +22,6 @@ public class MyJFinalConfig extends JFinalConfig{
 	public void configHandler(Handlers arg0) {
 		
 	}
-	/**
-	 * 拦截器
-	 */
 	@Override
 	public void configInterceptor(Interceptors arg0) {
 		
@@ -34,22 +31,13 @@ public class MyJFinalConfig extends JFinalConfig{
 	public void configPlugin(Plugins arg0) {
 		
 	}
-	/**
-	 * 路由
-	 */
 	@Override
 	public void configRoute(Routes me) {
 		me.add("hello", HelloController.class);
 	}
-	/**
-	 *  起服
-	 */
 	@Override
 	public void afterJFinalStart() {
 	}
-	/**
-	 * 停服
-	 */
 	@Override
 	public void beforeJFinalStop() {
 	}
