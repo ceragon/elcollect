@@ -1,17 +1,28 @@
 package com.elcolect.elastic;
 
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.List;
-
+import java.util.List;import org.apache.lucene.analysis.sr.SerbianNormalizationFilter;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms.Bucket;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsBuilder;
+import org.elasticsearch.search.sort.SortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
+
 
 public class ElasticSearchHandler {
 	private Client client;
@@ -22,36 +33,40 @@ public class ElasticSearchHandler {
 		InetSocketTransportAddress transportAddress=new InetSocketTransportAddress(InetAddress.getByName(ipAddress), 9300);
 		client=TransportClient.builder().build().addTransportAddress(transportAddress);
 	}
-	
-	 /**
-     * 执行搜索
-     * @param queryBuilder
-     * @param indexname
-     * @param type
-     * @return
-     */
-    public List<Medicine>  searcher(QueryBuilder queryBuilder, String indexname, String type){
-        List<Medicine> list = new ArrayList<Medicine>();
-        SearchResponse searchResponse = client.prepareSearch(indexname).setTypes(type)
-        .setQuery(queryBuilder)
-        .execute()
-        .actionGet();
-        SearchHits hits = searchResponse.getHits();
-        System.out.println("查询到记录数=" + hits.getTotalHits());
-        SearchHit[] searchHists = hits.getHits();
-        if(searchHists.length>0){
-            for(SearchHit hit:searchHists){
-                Integer id = (Integer)hit.getSource().get("id");
-                String name =  (String) hit.getSource().get("name");
-                String function =  (String) hit.getSource().get("funciton");
-                list.add(new Medicine(id, name, function));
-            }
+	 // 获取少量数据100个
+    private List<String> getSearchData(QueryBuilder queryBuilder,String IndexName) {
+        List<String> ids = new ArrayList<String>();
+        SearchResponse searchResponse = client.prepareSearch(IndexName)
+                .setQuery(queryBuilder).setSize(100)
+                .execute().actionGet();
+        SearchHits searchHits = searchResponse.getHits();
+        for (SearchHit searchHit : searchHits) {
+            String id = (String) searchHit.getSource().get("classline");
+            ids.add(id);
         }
-        return list;
+        return ids;
+    }
+    private Aggregations countSearchData(QueryBuilder queryBuilder,TermsBuilder aggregation,String IndexName) {
+        SearchResponse searchResponse = client.prepareSearch(IndexName)
+        		.addAggregation(aggregation)
+                .setQuery(queryBuilder)
+                .setSize(0)
+                .execute().actionGet();
+        Aggregations searchHits = searchResponse.getAggregations();
+        return searchHits;
     }
 	public static void main(String[] args) throws UnknownHostException {
-		ElasticSearchHandler handler=new ElasticSearchHandler();
-		
-		
+		QueryBuilder queryBuilder=QueryBuilders.matchAllQuery();
+		TermsBuilder termsBuilder=AggregationBuilders.terms("2");
+		termsBuilder.field("classline.raw");
+		termsBuilder.size(10);
+		ElasticSearchHandler handler=new ElasticSearchHandler("10.1.8.215");
+		Aggregations aggregations=handler.countSearchData(queryBuilder,termsBuilder, "logstash-*");
+		for (Aggregation aggregation : aggregations) {
+			StringTerms terms=(StringTerms)aggregation;
+			for (Bucket bucket : terms.getBuckets()) {
+				System.out.println(bucket.getKey()+"  "+bucket.getDocCount());
+			}
+		}
 	}
 }
