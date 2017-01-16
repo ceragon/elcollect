@@ -1,6 +1,7 @@
 package com.elcolect.server.jfinal;
 
-import com.elcolect.server.jfinal.controller.HelloController;
+import com.elcolect.server.jfinal.controller.ELogController;
+import com.elcolect.server.jfinal.controller.IndexController;
 import com.jfinal.config.Constants;
 import com.jfinal.config.Handlers;
 import com.jfinal.config.Interceptors;
@@ -32,7 +33,8 @@ public class MyJFinalConfig extends JFinalConfig{
 	}
 	@Override
 	public void configRoute(Routes me) {
-		me.add("hello", HelloController.class);
+		me.add("index", IndexController.class);
+		me.add("elog", ELogController.class);
 	}
 	@Override
 	public void afterJFinalStart() {

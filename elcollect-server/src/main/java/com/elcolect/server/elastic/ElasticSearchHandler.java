@@ -30,7 +30,7 @@ public class ElasticSearchHandler {
 		InetSocketTransportAddress transportAddress=new InetSocketTransportAddress(InetAddress.getByName(ipAddress), 9300);
 		client=TransportClient.builder().build().addTransportAddress(transportAddress);
 	}
-	 // 获取少量数据100�?
+	 // 获取少量数据100
     private List<String> getSearchData(QueryBuilder queryBuilder,String IndexName) {
         List<String> ids = new ArrayList<String>();
         SearchResponse searchResponse = client.prepareSearch(IndexName)
@@ -43,7 +43,7 @@ public class ElasticSearchHandler {
         }
         return ids;
     }
-    private Aggregations countSearchData(QueryBuilder queryBuilder,TermsBuilder aggregation,String IndexName) {
+    public Aggregations countSearchData(QueryBuilder queryBuilder,TermsBuilder aggregation,String IndexName) {
         SearchResponse searchResponse = client.prepareSearch(IndexName)
         		.addAggregation(aggregation)
                 .setQuery(queryBuilder)
